@@ -109,7 +109,7 @@ class Series:
         for r in self.r_list:
             if r.status == STATUS_OPEN:
                 temp_dict[r.start_date.timestamp()] = r
-            self._last_r = temp_dict[max(list(temp_dict.keys()))]
+                self._last_r = temp_dict[max(list(temp_dict.keys()))]
 
     @property
     def s_amount(self):
@@ -150,9 +150,10 @@ class RDs:
         self._s_list = {}
         self.refresh()
 
-    def refresh(self):
-        with open(FILE_NAME, 'rb') as csv_file:
-            self._r_list = pickle.load(csv_file)
+    def refresh(self, read_from_file=True):
+        if read_from_file:
+            with open(FILE_NAME, 'rb') as csv_file:
+                self._r_list = pickle.load(csv_file)
         for r in self._r_list:
             r.refresh()
         for r in self._r_list:
@@ -175,18 +176,41 @@ class RDs:
             if r.rid == r_id:
                 return r
 
+    def modify_r(self, r_id, param, val):
+        if val is None:
+            return "Invalid datatype"
+        index = 0
+        for r in range(len(self.r_list)):
+            if self.r_list[r].rid == r_id:
+                index = r
+                break
+        if param == 'S':
+            self._r_list[index].series = val
+        elif param == 'D':
+            self._r_list[index].start_date = val
+        elif param == 'A':
+            self._r_list[index].amount = val
+        elif param == 'T':
+            self._r_list[index].tenure = val
+        else:
+            return "Invalid input given.\nResuming to main menu"
+        self.refresh(read_from_file=False)
+        self.write_data()
+        return "Modified successfully"
+
     def get_top_r(self, select_all=False, select_series=None):
         temp_dict = {}
         result = []
-        list_to_use = self.r_list
+        list_to_use = self.r_list.copy()
         if isinstance(select_series, int):
-            list_to_use = self.s_list[select_series].r_list
+            list_to_use = self.s_list[select_series].r_list.copy()
         max_count = [TOP_NUMBER, len(list_to_use)][select_all]
         for r in list_to_use:
+            if r.status == STATUS_CLOSED:
+                continue
             if r.remaining_time not in temp_dict:
-                temp_dict[r.remaining_time] = [r]
-            else:
-                temp_dict[r.remaining_time].append(r)
+                temp_dict[r.remaining_time] = []
+            temp_dict[r.remaining_time].append(r)
         sorted_time = sorted(temp_dict.keys())
         for time in sorted_time:
             for r in temp_dict[time]:
@@ -200,7 +224,7 @@ class RDs:
         current = datetime.today()
         print_dict = {}
         for r in self.r_list:
-            if r.status == STATUS_OPEN and r.start_date.day >= datetime.today().day:
+            if r.status == STATUS_OPEN and r.start_date.day > datetime.today().day:
                 is_breaking = "No"
                 maturity_month = r.maturity_date.month
                 premium_date = datetime(day=r.start_date.day, month=current.month,

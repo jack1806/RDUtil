@@ -4,20 +4,59 @@ from rdutil.rditem import *
 DATA = RDs()
 
 
+def print_c(string):
+    print(MENU_ITEM_FORMAT.format(string))
+
+
+def printf(fmt, *args):
+    print(fmt.format(*args))
+
+
+def modify_rd():
+    series = int(input(MENU_ITEM_FORMAT.format("Select series : ")))
+    series_rd = DATA.get_top_r(select_all=True, select_series=series)
+    print_c("Select id from following items")
+    for i in series_rd:
+        printf(RD_FORMAT_WITH_ID, str(i.rid), str(i))
+    choice = int(input(MENU_ITEM_FORMAT.format("Choice : ")))
+    rd_item = DATA.get_r(choice)
+    print_c(f"Selected RD item with id : {choice}")
+    print(RD_HEADER)
+    print(str(rd_item))
+    print_c("S : Series\nD : Date\nA : Amount\nT : Tenure")
+    modify = str(input(MENU_ITEM_FORMAT.format("Enter first letter of property to modify :"))).upper()
+    val = None
+    if modify == 'S':
+        val = input(MENU_ITEM_FORMAT.format("Series : "))
+    elif modify == 'D':
+        val = list(map(int, input(MENU_ITEM_FORMAT.format("Date ( DD MM YYYY ) : ")).split(" ")))
+        val = datetime(val[2], val[1], val[0])
+    elif modify == 'A':
+        val = int(MENU_ITEM_FORMAT.format(input("Amount : ")))
+    elif modify == 'T':
+        val = int(input(MENU_ITEM_FORMAT.format("Tenure : ")))
+    print(DATA.modify_r(r_id=choice, param=modify, val=val))
+
+
 def print_menu():
     for choice in range(len(MENU)):
-        print(MENU_ITEM_FORMAT.format(f"{choice+1}. {MENU[choice]}"))
+        print_c(f"{choice+1}. {MENU[choice]}")
     return int(input(MENU_ITEM_FORMAT.format("Enter your choice here : ")))
 
 
 def add_new_entry():
-    series = input(MENU_ITEM_FORMAT.format("Series : "))
-    amount = int(MENU_ITEM_FORMAT.format(input("Amount : ")))
-    date = list(map(int, input(MENU_ITEM_FORMAT.format("Date ( DD MM YYYY ) : ").split(" "))))
+    series = int(input(MENU_ITEM_FORMAT.format("Series : ")))
+    if series in DATA.s_list:
+        print(MENU_ITEM_FORMAT.format("Series exists, using existing Amount and tenure"))
+        amount = DATA.s_list[series].s_amount
+        tenure = DATA.s_list[series].r_list[0].tenure
+    else:
+        amount = int(input(MENU_ITEM_FORMAT.format("Amount : ")))
+        tenure = int(input(MENU_ITEM_FORMAT.format("Tenure : ")))
+    date = list(map(int, input(MENU_ITEM_FORMAT.format("Date ( DD MM YYYY ) : ")).split(" ")))
     date = datetime(date[2], date[1], date[0])
-    tenure = int(input(MENU_ITEM_FORMAT.format("Tenure : ")))
     DATA.add_r(series=series, amount=amount, start=date, tenure=tenure)
-    print("Entry added.")
+    print_c("Entry added.")
 
 
 def print_r(select_all=False, select_series=None):
@@ -47,13 +86,15 @@ def run_main():
             s = int(input(MENU_ITEM_FORMAT.format("Select series : ")))
             print_r(True, s)
         elif choice == CHOICE_VIEW:
-            print(MENU_ITEM_FORMAT.format("Premium dates : "))
+            print_c("Premium dates : ")
             DATA.upcoming_prem()
         elif choice == CHOICE_ALL:
             print_r(select_all=True)
         elif choice == CHOICE_CLOSING_SOON:
-            print(MENU_ITEM_FORMAT.format("Closing soon : "))
+            print_c("Closing soon : ")
             print_r()
+        elif choice == CHOICE_MODIFY:
+            modify_rd()
 
 
 run_main()
