@@ -39,8 +39,9 @@ def modify_rd():
 
 
 def print_menu():
-    for choice in range(len(MENU)):
-        print_c(f"{choice+1}. {MENU[choice]}")
+    for choice in range(0, len(MENU), 2):
+        print(COMPACT_MENU_ITEM.format(f"{choice+1}. {MENU[choice]}", f"{choice+2}. {MENU[choice+1]}"))
+    print(SEPARATOR)
     return int(input(MENU_ITEM_FORMAT.format("Enter your choice here : ")))
 
 
@@ -66,6 +67,12 @@ def print_r(select_all=False, select_series=None):
     print(SEPARATOR)
 
 
+def print_all_diff():
+    for series in DATA.s_list:
+        print(MENU_ITEM_FORMAT.format(f"Series Number : {series}"))
+        print_r(select_series=series, select_all=True)
+
+
 def run_main():
     while 1:
         choice = print_menu()
@@ -89,7 +96,7 @@ def run_main():
             print_c("Premium dates : ")
             DATA.upcoming_prem()
         elif choice == CHOICE_ALL:
-            print_r(select_all=True)
+            print_all_diff()
         elif choice == CHOICE_CLOSING_SOON:
             print_c("Closing soon : ")
             print_r()
