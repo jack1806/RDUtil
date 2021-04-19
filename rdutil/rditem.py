@@ -151,6 +151,7 @@ class RDs:
         self.refresh()
 
     def refresh(self, read_from_file=True):
+        self._s_list = {}
         if read_from_file:
             with open(FILE_NAME, 'rb') as csv_file:
                 self._r_list = pickle.load(csv_file)
