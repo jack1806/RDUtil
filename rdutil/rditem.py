@@ -135,11 +135,13 @@ class Series:
     def r_list(self):
         return self._r_list
 
-    def get_latest_r(self):
+    def get_latest_r(self, return_result=False):
         if self._last_r:
             last_date = self._last_r.start_date
             last_date += relativedelta(months=1, days=1)
             temp_rd = RDitem(self.last_r.rid, self.last_r.series, self.last_r.amount, last_date, self.last_r.tenure)
+            if return_result:
+                return temp_rd
             print(str(temp_rd))
 
 
@@ -224,15 +226,26 @@ class RDs:
         print(PREMIUM_HEADER)
         current = datetime.today()
         print_dict = {}
-        for r in self.r_list:
+        list_to_use = self.r_list.copy()
+        scheduled = []
+        for s in self.s_list.keys():
+            scheduled_r = self.s_list[s].get_latest_r(return_result=True)
+            list_to_use.append(scheduled_r)
+            scheduled.append(scheduled_r)
+        for r in list_to_use:
             if r.status == STATUS_OPEN and r.start_date.day > datetime.today().day:
-                is_breaking = "No"
+                is_breaking = "Scheduled"
                 maturity_month = r.maturity_date.month
-                premium_date = datetime(day=r.start_date.day, month=current.month,
-                                        year=current.year)
+                premium_date = r.start_date
+                if r not in scheduled:
+                    is_breaking = "No"
+                    premium_date = datetime(day=r.start_date.day, month=current.month,
+                                            year=current.year)
+                if premium_date.month != current.month:
+                    continue
                 if maturity_month == current.month:
                     is_breaking = "Yes"
-                if premium_date not in print_dict:
+                if premium_date.timestamp() not in print_dict:
                     print_dict[premium_date.timestamp()] = []
                 print_dict[premium_date.timestamp()].append([str(r.series), premium_date.strftime('%d %b %Y'),
                                                              str(r.amount), is_breaking])

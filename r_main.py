@@ -49,7 +49,7 @@ def add_new_entry():
     series = int(input(MENU_ITEM_FORMAT.format("Series : ")))
     if series in DATA.s_list:
         print(MENU_ITEM_FORMAT.format("Series exists, using existing Amount and tenure"))
-        amount = DATA.s_list[series].s_amount
+        amount = DATA.s_list[series].r_list[0].amount
         tenure = DATA.s_list[series].r_list[0].tenure
     else:
         amount = int(input(MENU_ITEM_FORMAT.format("Amount : ")))
